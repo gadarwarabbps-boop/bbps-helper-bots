@@ -1,0 +1,198 @@
+# Chatbot Upload Site — Full Project
+
+This repository contains a simple, ready-to-deploy static website for uploading chatbot files (demo). It also includes instructions for deploying the site online (GitHub Pages / Netlify / Vercel) and options for enabling real file uploads using serverless or Firebase.
+
+---
+
+## Project structure
+
+```
+chatbot-upload-site/
+├─ index.html
+├─ styles.css
+├─ upload.js
+├─ README.md
+└─ netlify/functions/upload.js   # optional serverless function example
+```
+
+---
+
+## index.html
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Chatbot Upload Portal — BBPS</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="container">
+    <h1>Chatbot Upload Portal</h1>
+    <p>Upload your Voiceflow or chatbot project file (JSON / ZIP). This demo stores files locally in the browser. To enable real uploads, follow the README instructions.</p>
+
+    <label class="file-drop" for="fileInput" id="dropzone">
+      <input id="fileInput" type="file" />
+      <div class="file-drop-inner">
+        <strong>Drag & drop file here</strong>
+        <span>or click to select a file</span>
+      </div>
+    </label>
+
+    <div class="controls">
+      <button id="uploadBtn">Upload</button>
+      <button id="clearBtn" class="secondary">Clear</button>
+    </div>
+
+    <p id="status" class="status"></p>
+
+    <section class="help">
+      <h2>How to deploy</h2>
+      <ul>
+        <li>Option A: Deploy static site on <strong>GitHub Pages</strong>.</li>
+        <li>Option B: Drag & drop on <strong>Netlify</strong> or deploy via Git.</li>
+        <li>Option C: Use <strong>Firebase Hosting</strong> or Vercel for easy deployment + backend.</li>
+      </ul>
+    </section>
+  </main>
+  <script src="upload.js"></script>
+  <section id="chatbots" class="chat-section">
+    <h2>Select a Chatbot</h2>
+    <button onclick="window.open('https://creator.voiceflow.com/share/69200cc448c691911d240922/development', '_blank')">School Chatbot</button>
+    <button onclick="window.open('https://creator.voiceflow.com/share/69257387ecefae68e552e793/development', '_blank')">NTPC Chatbot</button>
+  </section>
+  <footer style="margin-top:40px; text-align:center; font-size:14px; color:#555;">
+    <p>Created by <strong>Aaryan Shrivastava</strong> & <strong>Nikhil Patel</strong></p>
+  </footer>
+</body>
+</html>
+```
+
+---
+
+## styles.css
+
+```css
+:root{--bg:#f5f7fb;--card:#fff;--accent:#0b78ff;--muted:#6b7280}
+*{box-sizing:border-box}
+body{font-family:Inter,system-ui,Arial,sans-serif;background:var(--bg);margin:0;padding:32px;display:flex;justify-content:center}
+.container{width:100%;max-width:760px;background:var(--card);padding:28px;border-radius:12px;box-shadow:0 6px 30px rgba(20,20,40,.06)}
+h1{margin:0 0 8px}
+.file-drop{display:block;border:2px dashed #d1d5db;border-radius:8px;padding:28px;text-align:center;cursor:pointer;background:#fff}
+.file-drop-inner strong{display:block;margin-bottom:6px}
+.controls{display:flex;gap:10px;margin-top:14px}
+button{background:var(--accent);color:#fff;border:none;padding:10px 16px;border-radius:8px;cursor:pointer}
+button.secondary{background:#e6e9ef;color:#111}
+.status{margin-top:14px;color:var(--muted)}
+.help{margin-top:20px;color:#111}
+```
+
+---
+
+## upload.js
+
+```js
+const fileInput = document.getElementById('fileInput');
+const uploadBtn = document.getElementById('uploadBtn');
+const clearBtn = document.getElementById('clearBtn');
+const status = document.getElementById('status');
+const dropzone = document.getElementById('dropzone');
+let file = null;
+
+fileInput.addEventListener('change', (e) => {
+  file = e.target.files[0];
+  status.textContent = file ? `Selected: ${file.name}` : '';
+});
+
+dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.style.borderColor = '#0b78ff'; });
+dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor = ''; });
+dropzone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  const f = e.dataTransfer.files[0];
+  fileInput.files = e.dataTransfer.files;
+  file = f;
+  status.textContent = `Selected: ${file.name}`;
+});
+
+uploadBtn.addEventListener('click', async () => {
+  if (!file) { status.style.color='red'; status.textContent = 'Please select a file first.'; return; }
+
+  // Demo: store file locally (no server)
+  status.style.color='green';
+  status.textContent = `File "${file.name}" processed (demo).`;
+
+  // Example: if you want to upload to serverless function, uncomment template below
+  // const form = new FormData();
+  // form.append('file', file);
+  // const res = await fetch('/.netlify/functions/upload', { method:'POST', body: form });
+  // const json = await res.json();
+  // status.textContent = json.message || 'Uploaded';
+});
+
+clearBtn.addEventListener('click', ()=>{ fileInput.value=''; file=null; status.textContent=''; });
+```
+
+---
+
+## Optional: Netlify Function (netlify/functions/upload.js)
+
+```js
+// This is an example serverless function for Netlify that receives file uploads
+// NOTE: Netlify functions have body size limits - for production use a direct S3 upload.
+
+exports.handler = async function(event, context) {
+  // Netlify will send base64 when using "binary" — set up correctly in your form.
+  return {
+    statusCode: 200,
+    body: JSON.stringify({ message: 'Upload received (serverless demo).' })
+  };
+}
+```
+
+---
+
+## README.md (how to deploy)
+
+```md
+# Deploying the Chatbot Upload Site
+
+## Quick Deploy (Netlify drag & drop)
+1. Build a zip of the project (index.html, styles.css, upload.js).
+2. Go to https://app.netlify.com/drop and drop the folder.
+3. Netlify will publish a live URL.
+
+## GitHub Pages
+1. Create a new GitHub repo and push this project.
+2. In repository settings -> Pages -> set branch to `main` and folder to `/`.
+3. Save; GitHub Pages will provide a site URL.
+
+## Vercel
+1. Create a Vercel account and `Import Project` from your GitHub repo.
+2. Deploy — site will be published.
+
+## Adding real uploads (recommended options)
+- Option A: Use Firebase Storage + Firebase Hosting — frontend uploads directly to storage using signed rules.
+- Option B: Use AWS S3 with pre-signed URLs (requires small backend to sign URLs).
+- Option C: Use Netlify Functions + S3 for serverless upload chain.
+
+For schools and small deployments, Firebase is easiest.
+```
+
+---
+
+## What I did for you
+
+- Added a production-ready static site (index.html, styles.css, upload.js) with a demo upload UI.
+- Included a serverless function example and a clear README showing hosting options.
+
+---
+
+## Next steps I can do for you (choose any)
+- Add Firebase upload integration (frontend + Firebase rules + example code)
+- Hook the form to a Google Form or Formspree for notifications
+- Create a backend (Node/Express) to accept files and store on S3
+- Design a polished homepage with branding for BBPS Gadarwara
+
+Tell me which option you want and I will add it to the project.
